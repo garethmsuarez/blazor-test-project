@@ -1,0 +1,90 @@
+@page "/DragAndDrop"
+
+<h1>Drag and Drop test page</h1>
+
+<header class="content-wrapper">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <a class="navbar-brand" href="#">Brand Logo</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="#">Link 1</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Link 2</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Link 3</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Scrollable Content -->
+  <div class="scrollable-content" ondragover="event.preventDefault();">
+    @foreach (var item in items.OrderBy(x => x.Order))
+    {
+        <div draggable="true" @key="item.Id" @ondragstart="@(()=> DragStart(item))" @ondrop="@(()=> Drop(item))">@item.Name</div>
+    }
+    
+
+  </div>
+
+  @code {
+    int currentIndex =0;
+    public class Item
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public int Order { get; set; }
+    }
+
+    List<Item> items = new List<Item>() {
+        new Item(){ Id = 1, Name = "Item 1", Order = 1 },
+        new Item(){ Id = 2, Name = "Item 2", Order = 2 },
+        new Item(){ Id = 3, Name = "Item 3", Order = 3 },
+        new Item(){ Id = 4, Name = "Item 4", Order = 4 },
+        new Item(){ Id = 5, Name = "Item 5", Order = 5 }
+        };
+    
+    public void DragStart(Item item)
+    {
+        currentIndex = item.Order;
+        Console.WriteLine($"Dragged {item.Name}");
+    }
+
+    public void Drop(Item item)
+    {
+        Console.WriteLine($"Dropped item {currentIndex} at {item.Order}");
+        var itemToMove = items.Single(i => i.Order == currentIndex);
+        MoveItemToNewOrder(items, itemToMove.Id, item.Order);
+        StateHasChanged();
+    }
+
+    public static void MoveItemToNewOrder(List<Item> items, int itemId, int newOrder)
+    {
+        // Get the item to move
+        Item itemToMove = items.Single(i => i.Id == itemId);
+
+        // Remove the item from its current position
+        items.Remove(itemToMove);
+
+        // Update the Order property of the item to move
+        itemToMove.Order = newOrder;
+
+        // Insert the item at its new position
+        items.Insert(newOrder - 1, itemToMove);
+
+        // Update the Order property of the affected items
+        for (int i = 0; i < items.Count; i++)
+        {
+            items[i].Order = i + 1;
+        }
+    }
+
+
+  }
